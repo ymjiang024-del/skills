@@ -283,29 +283,12 @@ Content-Type: application/json
 
 如果：status不是Deployed。不要：SSH。不要：WebSSH。
 
-打开：
+打开：列表页。提示：正在部署。
 
-列表页。
-
-提示：
-
-正在部署。
-
-调用：
-
-task_done。
+调用：task_done。
 
 summary：
-
-写：
-
-机器
-
-状态
-
-规格
-
-连接方式。
+写：机器、状态、规格、连接方式。
 
 完整参数说明：
 
