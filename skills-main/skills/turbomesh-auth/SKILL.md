@@ -52,7 +52,7 @@ Authorization: Bearer <token>
 如果以上都没有，向用户询问邮箱和密码，调用登录接口获取 token。
 
 ```
-POST {api_url}/api/auth/login
+POST {api_url}/api/auth/signin
 Content-Type: application/json
 
 {
@@ -106,7 +106,7 @@ Authorization: Bearer {access_token}
 ## 登出
 
 ```
-POST {api_url}/api/auth/logout
+POST {api_url}/api/auth/signout
 Authorization: Bearer {access_token}
 ```
 
@@ -119,7 +119,7 @@ Authorization: Bearer {access_token}
 登录成功以后，如果 token 来源：交互登录，则保存 config，否则：不要保存
 
 ```
-GET {api_url}/api/auth/check-login
+GET {api_url}/api/auth/check-signin
 Authorization: Bearer {access_token}
 ```
 
