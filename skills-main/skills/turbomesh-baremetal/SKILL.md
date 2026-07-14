@@ -10,6 +10,37 @@ version: 0.1.0
 
 ## 认证
 
+## 可用工具
+
+本 Skill 支持以下工具：
+
+- list_baremetal_options
+  查看可申请规格
+
+- list_baremetals
+  查看已申请机器
+
+- get_baremetal
+  获取机器详情
+
+- allocate_baremetal
+  分配机器
+
+- release_baremetal
+  释放机器
+
+- get_baremetal_login_script
+  获取 SSH 登录命令
+
+- get_baremetal_webssh_url
+  获取 WebSSH 地址
+
+- power_control_baremetal
+  开关机
+
+- exec_on_baremetal
+  执行命令
+
 所有请求需要携带 `Authorization: Bearer {token}`。
 
 Token 获取方式参考 `turbomesh-auth` 技能的认证优先级：
@@ -18,6 +49,81 @@ Token 获取方式参考 `turbomesh-auth` 技能的认证优先级：
 3. 都没有时，提示用户登录
 
 如果请求返回 401，参考 `turbomesh-auth` 技能重新登录。
+
+## 页面跳转规范
+
+根据不同场景调用 open_page：
+
+### 机器列表
+
+当用户：
+
+- 查看我的机器
+- 查看裸金属列表
+- 查看所有机器
+
+调用：
+
+open_page(
+    url="/console/baremetal",
+    title="裸金属列表"
+)
+
+---
+
+### 单台机器详情
+
+当用户：
+
+- 查看某台机器
+- 查看详情
+- 查看状态
+
+调用：
+
+open_page(
+    url="/console/baremetal/{system_id}",
+    title="裸金属详情"
+)
+
+---
+
+### WebSSH
+
+仅当用户明确要求：
+
+- 浏览器打开
+- 在线打开
+- 打开 WebSSH
+
+调用：
+
+open_page(
+    url=<webssh_url>,
+    title="WebSSH 在线终端"
+)
+
+调用时机：
+
+当用户表达：
+
+- 我要申请机器
+- 给我一台机器
+- 申请裸金属
+
+第一步：
+
+调用：
+
+list_baremetal_options
+
+获取：
+
+当前所有规格。
+
+严禁：
+
+直接 allocate。
 
 ## 查看可申领机器
 
@@ -46,6 +152,22 @@ GET /api/baremetal/machines/count
 }
 ```
 
+必须调用 clarify。
+
+让用户：
+
+选择规格。
+
+如果只有一种规格。
+
+也必须：
+
+clarify。
+
+不能：
+
+默认选择。
+
 ## 查看可用操作系统镜像
 
 ```
@@ -66,9 +188,81 @@ GET /api/baremetal/images
 }
 ```
 
+## 申请机器 Workflow
+
+申请裸金属时，必须按照以下顺序执行：
+
+1.
+调用 list_baremetal_options。
+
+2.
+严禁直接调用 allocate。
+
+必须先获取规格。
+
+3.
+将规格通过 clarify 展示给用户。
+
+等待用户点击确认。
+
+4.
+用户确认后。
+
+再次调用 clarify。
+
+要求填写：
+
+- os_user
+- os_pwd
+
+5.
+用户确认后。
+
+调用 allocate_baremetal。
+
+### 第一次确认
+
+获取规格以后：
+
+必须调用 clarify。
+
+展示所有规格。
+
+等待用户点击。
+
+如果只有一个规格。
+
+仍然必须 clarify。
+
+不能默认选择。
+
+### 第二次确认
+
+用户选择规格以后。
+
+再次调用 clarify。
+
+要求输入：
+
+os_user
+
+os_pwd
+
+收到以后。
+
+才能调用 allocate。
+
 ## 分配并部署裸金属
 
 这是最常用的操作，一步完成分配 + 系统部署：
+
+仅当：
+
+用户完成两次 clarify。
+
+才能调用：
+
+allocate。
 
 ```
 POST /api/baremetal/allocate
@@ -84,6 +278,34 @@ Content-Type: application/json
   "comment": "由 AI Agent 分配"
 }
 ```
+
+### Deploying
+
+如果：status不是Deployed。不要：SSH。不要：WebSSH。
+
+打开：
+
+列表页。
+
+提示：
+
+正在部署。
+
+调用：
+
+task_done。
+
+summary：
+
+写：
+
+机器
+
+状态
+
+规格
+
+连接方式。
 
 完整参数说明：
 
@@ -118,6 +340,61 @@ Content-Type: application/json
 }
 ```
 
+## 查看机器 / 查看连接 Workflow
+### Step1
+
+用户：
+
+查看机器
+
+我的机器
+
+我的裸金属
+
+查看列表
+
+↓
+
+调用：
+
+list_baremetals
+
+### Step2
+
+如果：
+
+用户没有指定：
+
+hostname
+
+system_id
+
+↓
+
+必须调用：
+
+clarify
+
+列出：
+
+所有机器。
+
+等待用户点击。
+
+如果：
+
+用户已经指定：
+
+hostname
+
+system_id
+
+↓
+
+直接继续。
+
+无需 clarify。
+
 ## 查看已分配机器列表
 
 ```
@@ -150,10 +427,28 @@ GET /api/baremetal/allocated
 }
 ```
 
+### Step3
+
+确定目标机器以后：
+
+调用：
+
+open_page()
+
+打开：
+
+机器详情。
+
 ## 获取 SSH 连接命令
 
 裸金属机器通过 Voidgate 跳板机连接，**禁止直接使用机器 IP 连接**。
 部署完成后（status_name 为 Deployed），调用以下接口获取实际的 SSH 连接命令：
+
+WebSSH 获取成功以后。
+
+调用：
+
+get_baremetal_login_script。
 
 ```
 GET /api/voidgate/login-script?resource={system_id}&type=baremetal
@@ -169,6 +464,18 @@ GET /api/voidgate/login-script?resource={system_id}&type=baremetal
 ```
 
 将 `command` 字段的值直接告知用户即可，这就是实际可用的 SSH 连接命令。
+
+### 输出格式
+
+连接方式：
+
+按照以下顺序：
+
+① WebSSH
+
+② SSH
+
+③ 机器信息
 
 ## 查看机器详情
 
@@ -194,6 +501,11 @@ GET /api/baremetal/{system_id}
   }
 }
 ```
+
+如果：存在多台机器。
+必须：clarify。
+禁止：一次输出：
+多个SSH。
 
 ## 部署操作系统（已分配但未部署的机器）
 
@@ -233,6 +545,61 @@ Content-Type: application/json
 }
 ```
 
+## 释放机器 Workflow
+
+Step1
+调用：
+list_baremetals
+↓
+Step2
+如果没有指定机器
+↓
+clarify
+请选择需要释放的机器
+↓
+Step3
+用户点击以后
+↓
+再次 clarify
+确认：
+释放后数据将无法恢复。
+↓
+Step4
+用户点击确认
+↓
+release_baremetal()
+↓
+Step5
+open_page("/console/baremetal")
+↓
+task_done()
+
+## 电源控制 Workflow
+
+Step1
+list_baremetals
+↓
+Step2
+确认目标机器
+↓
+如果没有指定
+clarify
+↓
+Step3
+生成资源操作预览
+↓
+clarify
+确认：
+是否开机/关机
+↓
+Step4
+power_control_baremetal()
+↓
+Step5
+open_page()
+↓
+task_done()
+
 ## 释放机器
 
 释放后机器回到资源池，数据将被清除：
@@ -254,6 +621,112 @@ Content-Type: application/json
 - `secure_erase`：安全擦除（更慢但更安全）
 - `quick_erase`：快速擦除
 
+## 执行命令 Workflow
+
+Step1
+
+list_baremetals
+
+↓
+
+Step2
+
+确定目标机器
+
+↓
+
+如果没有指定
+
+clarify
+
+↓
+
+Step3
+
+确认执行命令
+
+↓
+
+clarify
+
+↓
+
+Step4
+
+exec_on_baremetal()
+
+↓
+
+Step5
+
+open_page()
+
+↓
+
+task_done()
+
+## 获取 WebSSH
+
+GET
+
+/api/voidgate/webssh
+
+……
+
+说明：
+
+优先返回：
+
+WebSSH。
+
+其次：
+
+SSH。
+
+
+## 输出规范
+
+连接方式：
+
+WebSSH
+
+↓
+
+SSH
+
+↓
+
+机器信息
+
+SSH
+
+必须：
+
+```bash
+ssh ...
+
+## 注意事项
+
+1.禁止：直接SSH IP
+
+2.allocate必须：先 list options
+
+3.申请必须：两次 clarify
+
+4.释放必须：确认
+
+5.Deploying不能：SSH、不能：WebSSH
+
+6.不能：自动 power_on
+
+7.查看连接必须：先确定机器
+
+8.一次：只能返回一个SSH
+
+9.所有 Workflow最后：task_done
+
+
+
 ## 机器状态说明
 
 | status_name | 含义 |
@@ -263,12 +736,3 @@ Content-Type: application/json
 | Deployed | 已部署系统，可正常使用 |
 | Deploying | 正在部署系统 |
 | Releasing | 正在释放 |
-
-## 注意事项
-
-- **禁止直接使用机器 IP 连接**，必须通过 `GET /api/voidgate/login-script` 获取跳板机 SSH 命令
-- 创建前先调用 machines/count 确认有可用机器
-- 分配 + 部署是异步过程，部署完成后 status_name 变为 Deployed
-- 释放操作不可逆，执行前必须向用户确认
-- tags 是必须参数，必须从 machines/count 接口返回的 tag_code 中选择
-- 裸金属接口通过 turbomesh-api 网关代理到 MAAS 服务，路径前缀为 `/api/baremetal/`
