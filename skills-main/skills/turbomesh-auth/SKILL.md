@@ -16,6 +16,10 @@ version: 0.1.0
 
 调用 TurboMesh API 时，按以下优先级获取当前用户的 JWT token：
 
+如果 token 来源于 system prompt，
+
+不要：覆盖config.json。
+
 ### 1. System Prompt 注入（推荐，用于网页版 Public Agent）
 
 检查当前对话的 system message 中是否包含：
@@ -92,6 +96,7 @@ Authorization: Bearer {access_token}
 ## Token 过期处理
 
 如果任何 API 请求返回 HTTP 401，说明 Token 已过期或无效。
+如果当前 token 来源于 system prompt，不要写 config，直接提示重新登录
 此时应：
 1. 提示用户 Token 已过期
 2. 重新询问密码
@@ -105,9 +110,13 @@ POST {api_url}/api/auth/logout
 Authorization: Bearer {access_token}
 ```
 
+登录成功以后，如果 token 来源：交互登录，则保存 config，否则：不要保存
+
 登出后清除 `~/.turbomesh/config.json` 中的 token 字段。
 
 ## 检查登录状态
+
+登录成功以后，如果 token 来源：交互登录，则保存 config，否则：不要保存
 
 ```
 GET {api_url}/api/auth/check-login
@@ -125,6 +134,23 @@ Authorization: Bearer {access_token}
   }
 }
 ```
+
+## Token 获取 Workflow
+
+Step1
+检查system prompt
+
+Step2
+检查config.json
+
+Step3
+没有
+↓
+登录
+Step4
+保存
+↓
+继续业务
 
 ## 首次使用流程
 
