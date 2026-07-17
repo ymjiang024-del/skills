@@ -47,7 +47,7 @@
     },
     {
       "id": "finetuning-orchestrator",
-      "name": "微调编排",
+      "name": "模型微调",
       "description": "管理微调实验、训练任务、效果对比与模型发布",
       "version": "0.1.0",
       "file": "skills/turbomesh-finetuning-orchestrator/SKILL.md"
