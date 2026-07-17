@@ -28,7 +28,7 @@ curl -sL https://raw.githubusercontent.com/gaowenrong/skills/main/install.sh | b
 | turbomesh-usage | 用量查询 — 查询资源用量、趋势、构成、账单 |
 | turbomesh-app-deployment | 应用部署 — 浏览应用、安装实例、启动、停止、重启与日志排查 |
 | turbomesh-elastic-deployment | 弹性服务管理 — 查看部署、扩缩容、配置更新、Ingress、日志与事件 |
-| turbomesh-finetuning-orchestrator | 微调编排 — 管理模型和数据集、实验、训练任务、效果对比与模型发布 |
+| turbomesh-finetuning-orchestrator | 模型微调 — 管理模型和数据集、实验、训练任务、效果对比与模型发布 |
 | turbomesh-model-deployment | 模型部署 — 部署和管理推理服务、端点、日志与性能指标 |
 
 ## 能力示例
