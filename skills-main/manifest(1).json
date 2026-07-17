@@ -1,6 +1,6 @@
 {
   "name": "turbomesh/turbomesh-ai",
-  "version": "0.2.0",
+  "version": "0.1.0",
   "description": "TurboMesh AI Skills — 让 Agent 自主管理超算云资源与 AI 工作负载",
   "skills": [
     {
