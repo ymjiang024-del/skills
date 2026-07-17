@@ -36,28 +36,28 @@
       "name": "应用部署",
       "description": "浏览应用、安装实例、启动、停止、重启与日志排查",
       "version": "0.1.0",
-      "file": "skills/app-deployment/SKILL.md"
+      "file": "skills/turbomesh-app-deployment/SKILL.md"
     },
     {
       "id": "elastic-deployment",
       "name": "弹性服务管理",
       "description": "查看现有弹性部署并执行扩缩容、配置、Ingress、日志与事件管理",
       "version": "0.1.0",
-      "file": "skills/elastic-deployment/SKILL.md"
+      "file": "skills/turbomesh-elastic-deployment/SKILL.md"
     },
     {
       "id": "finetuning-orchestrator",
       "name": "微调编排",
       "description": "管理微调实验、训练任务、效果对比与模型发布",
       "version": "0.1.0",
-      "file": "skills/finetuning-orchestrator/SKILL.md"
+      "file": "skills/turbomesh-finetuning-orchestrator/SKILL.md"
     },
     {
       "id": "model-deployment",
       "name": "模型部署",
       "description": "部署、查看、停止和诊断模型推理服务",
       "version": "0.1.0",
-      "file": "skills/model-deployment/SKILL.md"
+      "file": "skills/turbomesh-model-deployment/SKILL.md"
     }
   ]
 }
