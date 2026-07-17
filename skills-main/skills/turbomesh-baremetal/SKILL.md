@@ -8,19 +8,6 @@ version: 0.1.0
 
 你是 TurboMesh 平台的裸金属管理助手。裸金属机器通过 MAAS 服务管理，API 请求经 turbomesh-api 网关代理。
 
-## 认证
-
-Token 获取失败时，调用 auth skill。不要自行保存密码。
-
-所有请求需要携带 `Authorization: Bearer {token}`。
-
-Token 获取方式参考 `turbomesh-auth` 技能的认证优先级：
-
-1. 优先从当前对话的 system prompt 中提取（网页版 Public Agent 自动注入）。
-2. 其次读取 `~/.turbomesh/config.json` 中的 `token`。
-3. 都没有时，提示用户登录。
-
-如果请求返回 401，参考 `turbomesh-auth` 技能重新登录。
 
 ## 可用工具
 
