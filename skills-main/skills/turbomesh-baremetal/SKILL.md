@@ -434,3 +434,51 @@ handler 转换为后端请求：
 | `Deploying` | 正在部署系统 | 否 |
 | `Deployed` | 已部署系统，可正常使用 | 是 |
 | `Releasing` | 正在释放 | 否 |
+
+## 工具请求参数说明
+
+只能传入工具定义中声明的公开参数；所有 ID、规格标签等必须来自工具的真实返回，不得编造。
+
+### 参数总表
+
+| 参数                   | 类型/默认值                                       | 含义与限制                                                                                                                                                                                                     |
+| -------------------- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `system_id`          | `string`，必填                                  | 裸金属机器唯一标识，必须来自 `list_baremetals` 或分配结果，用于详情、释放、连接、电源和命令执行。不要用 hostname 或机器 IP 代替。                                                                                                                         |
+| `tags`               | `string[]`，分配时必填                             | 裸金属规格标签数组，必须来自 `list_baremetal_options`，格式如 `["A800-80G"]`。即使 handler 兼容字符串或 `tag_code`，工具调用仍只使用 `tags` 数组。                                                                                               |
+| `allocate_mode`      | `allocate_only` / `allocate_and_deploy`，默认后者 | `allocate_only` 仅申领机器；`allocate_and_deploy` 同时部署系统，并要求提供 `os_user`、`os_pwd`。                                                                                                                              |
+| `osystem`            | `string`，默认 `ubuntu`                         | 要部署的操作系统类型。                                                                                                                                                                                               |
+| `distro_series`      | `string`                                     | 操作系统发行版，如 `jammy`、`noble`。`tools.json` 标注默认 `jammy`，但 handler 实际缺省值为 `noble`；为避免歧义，建议调用时明确传入。                                                                                                             |
+| `os_user` / `os_pwd` | `string`                                     | 系统登录用户名和密码；`allocate_and_deploy` 模式下必须为非空值。密码只用于部署，不要在回复中重复展示。                                                                                                                                            |
+| `use_ssh_key`        | `boolean`，默认 `true`                          | 是否启用 SSH 公钥登录。handler 会将未传值处理为 `true`。                                                                                                                                                                    |
+| `cloud_init_stack`   | `object`，可选                                  | 部署时安装的软件栈，只允许下列字段：`nvidia_driver`（驱动版本）、`cuda_toolkit`（CUDA 版本）、`docker`、`nvidia_container_toolkit`、`fabric_manager`、`format_nvme_data_disk`。其中 `format_nvme_data_disk=true` 会格式化 NVMe 数据盘，必须明确告知风险并取得确认。 |
+| `zone` / `pool`      | `string`，可选                                  | 分别按可用区、资源池限制机器分配范围；不要自行猜测值。                                                                                                                                                                               |
+| `comment`            | `string`，可选                                  | 操作备注，可用于分配、释放或电源操作。                                                                                                                                                                                       |
+| `confirmed`          | `boolean`，释放时必填                              | 仅 `release_baremetal` 的公开参数，用户通过 `clarify` 明确确认后才可设为 `true`。它只用于工具安全校验，不直接作为后端释放业务字段。                                                                                                                     |
+| `action`             | `on` / `off`，电源操作必填                          | `on` 表示开机，`off` 表示关机。只能对已部署完成的机器调用；分配部署后不得主动再次开机。                                                                                                                                                         |
+| `command`            | `string`，执行命令时必填                             | 通过 Voidgate 在目标机器上执行的单条 shell 命令。执行前必须让用户确认具体命令及影响。                                                                                                                                                       |
+| `timeout`            | `integer`，默认 `300` 秒                         | 命令执行超时时间。handler 的 HTTP 等待时间会在此基础上增加约 10 秒。                                                                                                                                                               |
+
+### 工具参数速查
+
+| 工具                           | 请求参数                                                                                                                                     | 关键要求                                                                         |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `list_baremetal_options`     | 无                                                                                                                                        | 查询可申领规格；申请流程必须先调用。                                                           |
+| `list_baremetals`            | 无                                                                                                                                        | 查询当前用户已分配机器；返回结果会过滤 `ip_addresses`。                                          |
+| `get_baremetal`              | `system_id`                                                                                                                              | 获取单台机器详情；不得向用户提供机器内部 IP 直连方式。                                                |
+| `allocate_baremetal`         | `tags` 必填；`allocate_mode`、`osystem`、`distro_series`、`os_user`、`os_pwd`、`use_ssh_key`、`cloud_init_stack`、`zone`、`pool`、`comment` 可选或按模式必填 | 调用前必须完成规格选择和部署信息确认。该工具没有 `confirmed` 参数，用户确认属于工作流前置条件。                       |
+| `release_baremetal`          | `system_id`、`confirmed` 必填；`comment` 可选                                                                                                  | 释放不可逆。handler 会内部查询机器 `ip_addr` 并转换为后端所需的 `host`，调用工具时不得传 `host`、擦盘或强制释放参数。  |
+| `get_baremetal_login_script` | `system_id`                                                                                                                              | 仅机器状态为 `Deployed` 时调用，返回 Voidgate SSH 跳板命令。                                  |
+| `get_baremetal_webssh_url`   | `system_id`                                                                                                                              | 仅机器状态为 `Deployed` 时调用，返回临时 `url` 和 `expires_in`；URL 可能包含临时凭据。                |
+| `power_control_baremetal`    | `system_id`、`action` 必填；`comment` 可选                                                                                                     | 工作流要求先经 `clarify` 确认，但工具本身没有 `confirmed` 参数。                                 |
+| `exec_on_baremetal`          | `system_id`、`command` 必填；`timeout` 可选                                                                                                    | 工作流要求先确认命令，但工具本身没有 `confirmed` 参数；handler 会固定发送 `resource_type="baremetal"`。 |
+
+### 统一规则
+
+1. `system_id`、`tags`、`zone`、`pool` 必须来自真实查询结果。
+2. 工具未声明的参数禁止传入；不要传 `tag_code`、`host`、`ip_addr`、`resource_type` 等 handler 内部兼容或自动生成字段。
+3. `allocate_and_deploy` 必须提供 `os_user` 和 `os_pwd`；`allocate_only` 可不提供。
+4. 分配、释放、电源控制和命令执行均需遵守对应的 `clarify` 确认流程；只有释放工具需要传 `confirmed=true`。
+5. 非 `Deployed` 状态不得获取 WebSSH 或 SSH 登录命令。
+6. 禁止使用或展示机器内部 IP 作为连接方式，连接必须通过 WebSSH 或 Voidgate SSH 跳板命令。
+
+
