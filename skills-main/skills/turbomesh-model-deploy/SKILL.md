@@ -93,3 +93,45 @@ version：0.1.0
 - 部署失败时，报告工具返回的失败状态和错误信息，并在需要时获取日志辅助定位。
 - 缺少 `modelcamp_url` 时，不尝试调用 `open_page`。
 - 缺少所有可用端点字段时，明确说明尚未获得可调用地址，不要构造地址。
+
+## 工具请求参数说明
+
+只传入工具声明的公开参数。模型、节点和部署 ID 必须来自工具真实返回，不得根据名称自行编造。
+
+### 参数总表
+
+| 参数          | 类型/默认值                              | 含义与限制                                                                                          |
+| ----------- | ----------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `model_id`  | `string`，部署时必填                      | 模型唯一 ID，必须来自 `model_deploy_list_models`，不要使用模型名称代替。                                            |
+| `node_id`   | `string`，部署时必填                      | 目标 GPU 节点 ID，必须来自 `model_deploy_list_nodes`。选择前确认节点状态、空闲卡数和剩余显存满足模型要求。                         |
+| `deploy_id` | `string`                            | 模型部署实例 ID，必须来自部署结果或 `model_deploy_list_deployments`，用于查询监控、端点、详情、日志、指标和停止部署。不要与 `model_id` 混用。 |
+| `vram_gb`   | `integer`，可选                        | 按所需显存（GB）筛选可用节点；不传时查询全部节点。它表示模型部署所需显存，不是节点总显存。                                                 |
+| `status`    | `running/pending/failed/stopped`，可选 | 按状态筛选部署列表；不传时返回全部状态。`running` 为运行中，`pending` 为处理中，`failed` 为失败，`stopped` 为已停止。                 |
+| `confirmed` | `boolean`，部署和停止时必填                  | 用户通过 `clarify` 明确确认后才能设为 `true`。该参数只用于工具侧安全检查，不会发送给后端业务接口。                                     |
+| `lines`     | `integer`，默认 `300`                  | 获取容器日志时返回的尾部行数，只控制日志数量，不表示时间范围。                                                                |
+
+### 工具参数速查
+
+| 工具                                     | 请求参数                                | 关键要求                                                                                               |
+| -------------------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `model_deploy_list_models`             | 无                                   | 查询可部署模型。handler 内部固定使用 `page=1`、`page_size=100`，分页值不是公开参数。                                         |
+| `model_deploy_list_nodes`              | `vram_gb` 可选                        | 查询 GPU 节点；不得展示节点内网 IP。推荐节点前检查剩余显存和空闲 GPU 是否满足模型需求。                                                 |
+| `model_deploy_list_deployments`        | `status` 可选                         | 查询已有部署。handler 内部固定使用 `page=1`、`page_size=50`，不得传分页参数。                                             |
+| `model_deploy_get_deployment`          | `deploy_id`                         | 获取部署监控信息，包括状态、容器、端口、GPU 分配和端点。handler 会将 `deploy_id` 映射为后端参数 `id`。                                 |
+| `model_deploy_deploy_model`            | `model_id`、`node_id`、`confirmed` 必填 | 部署前必须确认模型、检查节点资源并通过 `clarify` 展示方案。handler 实际发送的业务字段只有 `model_id` 和 `node_id`；部署为异步任务，提交成功后禁止重复调用。 |
+| `model_deploy_stop_deployment`         | `deploy_id`、`confirmed` 必填          | 停止后容器会被销毁，调用前必须确认。handler 将 `deploy_id` 映射为业务字段 `id`，`confirmed` 不发送给后端。                           |
+| `model_deploy_get_deployment_logs`     | `deploy_id` 必填，`lines` 可选           | 获取容器日志，`lines` 默认 `300`。失败时如实说明错误，不得声称已成功。                                                         |
+| `model_deploy_get_deployment_metrics`  | `deploy_id`                         | 获取并发数、排队数、KV Cache 使用率、吞吐量和延迟等实时指标。                                                                |
+| `model_deploy_get_deployment_endpoint` | `deploy_id`                         | 获取调用端点。优先展示 `public_proxy_url` 和 `tokenbill_ve_url`/`ve_url`；均不存在时再展示 `endpoint`。                  |
+| `model_deploy_get_deployment_detail`   | `deploy_id`                         | 获取端点配置、模型属性及 Python、curl、JavaScript 调用代码。                                                          |
+
+### 统一规则
+
+1. `model_id`、`node_id`、`deploy_id` 含义不同，不得混用。
+2. 所有 ID 必须来自最近一次工具查询或部署结果。
+3. 工具未声明的参数禁止传入；`page`、`page_size` 和后端字段 `id` 均由 handler 内部处理。
+4. 部署和停止必须先通过 `clarify` 确认，再传 `confirmed=true`。
+5. 部署前必须检查 GPU 资源，不得超分或推荐显存不足的节点。
+6. 禁止展示节点内网 IP；端点只展示工具真实返回的可访问地址。
+7. 部署是异步操作，提交成功后通过部署查询工具轮询状态，不得重复创建。
+
