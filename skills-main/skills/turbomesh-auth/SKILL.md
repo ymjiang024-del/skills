@@ -48,16 +48,10 @@ value: <secret>
 识别以下格式：
 
 ```text
-Authorization: Bearer <token>
-TURBOMESH_TOKEN=<token>
-"token": "<token>"
+Authorization: Bearer <api_key>
 ```
 
-也检查环境变量：
-
-```text
-TURBOMESH_TOKEN
-```
+api_key从环境变量和配置文件来的，如果没有就问用户。
 
 如果找到 JWT Token：
 
