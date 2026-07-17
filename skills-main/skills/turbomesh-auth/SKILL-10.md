@@ -57,22 +57,7 @@ Content-Type: application/json
 }
 ```
 
-成功响应（HTTP 200）：
-```json
-{
-  "access_token": "eyJhbGciOiJIUzI1...",
-  "token_type": "bearer",
-  "user": {
-    "id": "a1b2c3d4e5f67890",
-    "username": "john",
-    "email": "user@example.com",
-    "account_name": "John",
-    "is_active": true
-  }
-}
-```
-
-登录成功后，将 `access_token` 保存到 `~/.turbomesh/config.json`：
+登录成功后，将 `access_token` 保存到 `~/.turbomesh/config.json`中的“token”：
 
 ```json
 {
@@ -112,18 +97,6 @@ Authorization: Bearer {access_token}
 ```
 GET {api_url}/api/auth/check-login
 Authorization: Bearer {access_token}
-```
-
-响应：
-```json
-{
-  "logged_in": true,
-  "user": {
-    "id": "...",
-    "username": "...",
-    "email": "..."
-  }
-}
 ```
 
 ## 首次使用流程
