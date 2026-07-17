@@ -88,6 +88,7 @@ finetuning_launch_training_job(
   experiment_id="exp_xxx",
   confirmed=true
 )
+```
 
 
 仅当当前工具契约明确支持时才传 `run_name`。禁止改用其他启动工具。
