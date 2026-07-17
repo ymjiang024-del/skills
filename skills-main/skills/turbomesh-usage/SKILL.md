@@ -12,7 +12,7 @@ verison：0.1.0
 
 以下路径以 `handlers.py` 中的实际实现为准。完整 HTTP 路径只在本节声明；后续功能章节只描述工具、参数和使用规则，不重复路径。
 
-| 工具 | 方法 | 完整路径 |
+| 方法 | 请求方式 | 完整路径 |
 |---|---|---|
 | `get_usage_overview` | GET | `/api/usage/overview` |
 | `get_usage_history` | GET | `/api/usage/history` |
