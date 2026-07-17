@@ -12,7 +12,7 @@
 | `turbomesh-usage` | 用量查询 — 资源用量、趋势、账单 |
 | `turbomesh-app-deployment` | 应用部署 — 应用发现、安装、实例启停、重启与日志 |
 | `turbomesh-elastic-deployment` | 弹性服务管理 — 扩缩容、配置、YAML、Ingress、日志与事件 |
-| `turbomesh-finetuning-orchestrator` | 微调编排 — 实验、训练 Job、效果对比与模型发布 |
+| `turbomesh-finetuning-orchestrator` | 模型微调 — 实验、训练 Job、效果对比与模型发布 |
 | `turbomesh-model-deployment` | 模型部署 — 推理服务部署、端点、日志与性能指标 |
 
 ## 快速安装
