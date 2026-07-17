@@ -1,6 +1,7 @@
 ---
 name: turbomesh-baremetal
-description: 管理 TurboMesh 裸金属机器，包括查询可申请规格、分配并部署机器、查看机器列表与详情、获取 WebSSH 和 Voidgate SSH 连接方式、执行开关机、释放机器以及在机器内执行命令。用户提出申请裸金属、查看裸金属状态或连接方式、开关机、释放机器、远程执行命令等请求时使用。严格按照两次确认、单机连接、禁止暴露或直连机器 IP、仅使用已实现工具与真实 API 路径等约束执行。
+description: TurboMesh 裸金属管理 — 分配、部署、释放、电源管理裸金属机器
+version: 0.1.0
 ---
 
 # TurboMesh 裸金属管理技能
