@@ -146,3 +146,72 @@ version: 0.1.0
 2. 引导用户前往控制台操作。
 3. 不调用任何更新、扩缩容或 YAML 工具替代创建或删除。
 4. 可调用 `open_page(url="/console/elastic", title="弹性部署列表")` 帮助用户进入控制台。
+
+## 工具请求参数说明
+
+只传入工具定义中声明的公开参数。部署 ID、名称、Pod 名、可用区和资源 ID 必须来自工具真实返回，不得猜测或编造。
+
+### 参数总表
+
+| 参数                              | 类型/默认值                                            | 含义与限制                                                                                             |
+| ------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `id_or_name`                    | `string`                                          | 弹性部署 ID 或名称，用于查询详情和扩缩容；存在重名风险时优先使用 ID。                                                            |
+| `id`                            | `string`                                          | 弹性部署 ID，仅用于提交完整配置更新，必须来自部署详情或列表。                                                                  |
+| `name`                          | `string`                                          | 弹性部署名称，用于 YAML、日志和 Ingress 操作，不要使用 ID 代替。                                                         |
+| `confirmed`                     | `boolean`                                         | 扩缩容、配置更新、YAML 提交和 Ingress 更新时必须为 `true`；只能在用户通过确认流程明确同意后设置，不发送为业务配置。                              |
+| `strategy`                      | `manual/cpu/memory/rps/queue`                     | 扩缩容策略：`manual` 固定副本；其余分别按 CPU、内存、RPS 或队列长度自动扩缩。                                                   |
+| `min_replicas` / `max_replicas` | `integer ≥ 0`                                     | 最小和最大副本数。`manual` 要求二者相等；自动扩缩容要求 `min_replicas < max_replicas`。                                   |
+| `target_cpu_utilization`        | `1–100`                                           | CPU 目标利用率，仅在 `strategy=cpu` 时使用。                                                                  |
+| `target_memory_utilization`     | `1–100`                                           | 内存目标利用率，仅在 `strategy=memory` 时使用。                                                                 |
+| `target_rps`                    | `integer ≥ 1`                                     | RPS 扩缩容阈值，仅在 `strategy=rps` 时使用；表示 KEDA HTTP pending/in-flight 阈值，不等同于严格业务 QPS。                   |
+| `target_queue_size`             | `integer ≥ 1`                                     | 队列长度阈值，仅在 `strategy=queue` 时使用。                                                                   |
+| `cooldown_period`               | `integer ≥ 0`，通常默认 `300` 秒                        | 缩容前的冷却或空闲等待时间；不传时保留部署当前配置或后端默认值。                                                                  |
+| `execution_timeout`             | `1–86400` 秒，通常默认 `600`                            | 弹性任务执行超时；不传时保留当前配置或后端默认值。                                                                         |
+| `payload`                       | `object`                                          | 完整弹性部署配置对象。预览和正式更新应使用同一份完整配置，不能只传局部变更；应基于 `get_elastic_app` 当前配置修改，避免覆盖未修改字段。                     |
+| `manual_yaml`                   | 非空 `string`                                       | 用户编辑后的完整 K8s YAML，会覆盖系统生成 YAML；提交前必须明确说明覆盖风险。                                                     |
+| `pod_name`                      | `string`                                          | 目标 Pod 名，通常来自部署详情中的实例列表，不得自行拼接。                                                                   |
+| `namespace`                     | `string`，默认 `turbomesh`                           | Kubernetes namespace，用于日志和 Ingress；未明确使用其他 namespace 时保持默认值。                                      |
+| `tail_lines`                    | `1–10000`，默认 `500`                                | 返回的日志尾部行数，只控制行数，不代表时间范围。                                                                          |
+| `enabled`                       | `boolean`，handler 默认 `true`                       | 是否启用 Ingress。工具未传时 handler 会按 `true` 处理。                                                          |
+| `enable_tls`                    | `boolean`，默认 `false`                              | 是否启用 TLS；启用前应确认域名和证书条件。                                                                           |
+| `rules`                         | `array`                                           | Ingress 规则列表。每项包含 `domain`、`service_port`，可选 `path` 和 `path_type`。                                |
+| `domain`                        | `string`                                          | Ingress 域名，必须由用户提供或来自已确认配置。                                                                       |
+| `service_port`                  | `integer`                                         | Ingress 转发的服务端口，必须与部署实际暴露端口一致。                                                                    |
+| `path`                          | `string`，默认 `/`                                   | Ingress URL 路径。                                                                                   |
+| `path_type`                     | `Prefix/Exact/ImplementationSpecific`，默认 `Prefix` | Kubernetes Ingress 路径匹配方式。                                                                        |
+| `zone_id`                       | `string`                                          | 可用区 ID，必须来自 `list_zones`，用于计算方案、K8s 版本、模板和共享文件系统查询。                                               |
+| `keyword`                       | `string`，可选                                       | 计算方案名称过滤词。`tools.json` 描述建议默认使用 `k8s`，但 handler 未自动补该默认值；需要 K8s 规格时应明确传 `k8s`，不传或传空字符串时按后端实际结果处理。 |
+| `template_filter`               | `string`，默认 `executable`                          | 模板过滤类型；未传时 handler 使用 `executable`。                                                               |
+| `resource_id`                   | `string`                                          | 查询事件的资源 ID，通常为弹性部署 ID。                                                                            |
+| `resource_type`                 | `string`，默认 `elastic`                             | 事件资源类型；弹性部署场景保持 `elastic`。                                                                        |
+
+### 工具参数速查
+
+| 工具                                  | 请求参数                                                                                                                    | 关键要求                                                    |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| `list_elastic_apps`                 | 无                                                                                                                       | 返回部署摘要列表。                                               |
+| `get_elastic_app`                   | `id_or_name`                                                                                                            | 查询单个部署；返回内容会过滤 `kubeconfig` 和节点内部 IP。                   |
+| `scale_elastic_app`                 | `id_or_name`、`strategy`、`min_replicas`、`max_replicas`、`confirmed` 必填；各类 target、`cooldown_period`、`execution_timeout` 可选 | 只修改 scaling 配置，其余配置由 handler 从当前部署中保留；参数关系不满足要求时不得静默修正。 |
+| `preview_elastic_app_config_update` | `payload`                                                                                                               | 仅生成配置预览，不提交；`payload` 必须为完整配置对象。                        |
+| `update_elastic_app_config`         | `id`、`payload`、`confirmed`                                                                                              | 提交完整配置并重新生成 K8s YAML；应使用确认过的预览配置。                       |
+| `update_elastic_app_manual_yaml`    | `name`、`manual_yaml`、`confirmed`                                                                                        | `manual_yaml` 必须是非空完整 YAML，会覆盖系统生成结果。                   |
+| `get_elastic_app_logs`              | `name`、`pod_name` 必填；`namespace`、`tail_lines` 可选                                                                        | Pod 名应来自部署详情；默认 namespace 为 `turbomesh`、日志行数为 `500`。    |
+| `update_elastic_app_ingress`        | `name`、`rules`、`confirmed` 必填；`namespace`、`enabled`、`enable_tls` 可选                                                     | `rules` 必须为数组；handler 默认启用 Ingress、关闭 TLS。              |
+| `list_zones`                        | 无                                                                                                                       | 获取后续资源查询所需的真实 `zone_id`。                                |
+| `list_compute_offerings`            | `zone_id` 必填；`keyword` 可选                                                                                               | `keyword` 只做名称过滤；需要弹性服务规格时建议明确传 `k8s`。                  |
+| `list_k8s_clusters`                 | 无                                                                                                                       | 查询用户已有 Kubernetes 集群。                                   |
+| `list_k8s_versions`                 | `zone_id`                                                                                                               | 查询指定可用区支持的 Kubernetes 版本。                               |
+| `list_templates`                    | `zone_id` 必填；`template_filter` 可选                                                                                       | `template_filter` 默认 `executable`。                      |
+| `list_sharedfs`                     | `zone_id`                                                                                                               | 查询指定可用区的共享文件系统。                                         |
+| `get_events`                        | `resource_id` 必填；`resource_type` 可选                                                                                     | 弹性部署场景中 `resource_type` 默认并保持为 `elastic`。               |
+
+### 统一规则
+
+1. `id_or_name`、`id` 和 `name` 用途不同，不得随意互换。
+2. `payload` 必须是完整配置，不要只传用户要求修改的局部字段。
+3. 扩缩容、配置更新、YAML 提交和 Ingress 更新必须先确认，再传 `confirmed=true`。
+4. TPS、TTFT、延迟和并发数不是扩缩容工具参数，不能直接映射后提交。
+5. 工具未声明的参数不得传入，也不得暴露 `kubeconfig`、内部 IP、凭据或完整敏感原始数据。
+6. 更新操作失败时必须如实返回错误，不得声称已成功。
+
+
