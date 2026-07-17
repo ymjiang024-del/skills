@@ -111,3 +111,47 @@ verison：0.1.0
 - 列表适合用 Markdown 表格展示；访问地址不要放入表格单元格。
 - 最终总结优先包含名称、节点、状态、实例 ID、访问地址和 ModelCamp 链接。
 - 不展示内网 IP、凭据、完整原始 JSON 或无关容器细节。
+
+## 工具请求参数说明
+
+调用工具时，只能传入工具定义中声明的参数，不得自行添加字段。
+
+### 参数总表
+
+| 参数           | 类型        | 必填情况     | 含义与使用规则                                                                                                  |
+| ------------ | --------- | -------- | -------------------------------------------------------------------------------------------------------- |
+| `app_id`     | `string`  | 按工具要求    | 应用广场中的应用 ID。必须来自 `app_deploy_list_apps` 的真实返回，用于查询应用详情、可安装节点和安装应用。不要使用应用名称代替，也不得自行编造。                    |
+| `install_id` | `string`  | 按工具要求    | 已安装应用实例 ID。必须来自 `app_deploy_list_app_installs` 或安装结果，用于查询详情、启动、停止、重启和查看日志。它与 `app_id` 不同，同一个应用可以有多个安装实例。 |
+| `node_id`    | `string`  | 安装时必填    | 目标节点 ID，必须来自 `app_deploy_list_install_nodes`。只能选择 `satisfies=true` 的节点，不要使用节点名称代替，也不要展示或推测节点内网 IP。       |
+| `confirmed`  | `boolean` | 安装、停止时必填 | 表示已经通过 `clarify` 获得用户明确确认，执行时必须为 `true`。该参数仅用于工具侧安全检查，不发送给后端业务接口。普通文本中的“可以”“好的”不能代替 `clarify` 确认。        |
+| `status`     | `string`  | 否        | 用于筛选安装实例，可选值为 `running`、`pending`、`failed`、`stopped`。不传时返回全部状态。                                          |
+| `lines`      | `integer` | 否        | 获取日志时返回的行数，默认 `300`。只控制日志行数，不代表日志时间范围。                                                                   |
+
+### 工具参数速查
+
+| 工具                                | 参数                                | 参数说明与限制                                                                                                                                                  |
+| --------------------------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `app_deploy_list_apps`            | 无                                 | 列出应用广场中的可安装应用。handler 内部固定使用 `page=1`、`page_size=100`，二者不是公开工具参数。                                                                                        |
+| `app_deploy_get_app_detail`       | `app_id` 必填                       | 获取单个应用详情。handler 会将 `app_id` 映射为后端查询参数 `id`；调用工具时仍应使用 `app_id`，不要传 `id`。                                                                                 |
+| `app_deploy_list_install_nodes`   | `app_id` 必填                       | 获取指定应用可安装的节点。重点检查节点 ID、名称、CPU、内存、显存和 `satisfies`。只有 `satisfies=true` 的节点才可安装。返回结果已过滤 `ip`、`ip_address`、`ip_addresses`、`internal_ip`。                     |
+| `app_deploy_list_app_installs`    | `status` 可选                       | 列出已安装应用实例。`status` 只允许 `running`、`pending`、`failed`、`stopped`。handler 内部固定使用 `page=1`、`page_size=50`，不要传分页参数。                                            |
+| `app_deploy_get_app_install`      | `install_id` 必填                   | 获取单个安装实例详情，包括状态、容器、端口、节点、`public_proxy_url`、`endpoint` 和访问方式。handler 会将 `install_id` 映射为后端参数 `id`。                                                       |
+| `app_deploy_install_app`          | `app_id`、`node_id`、`confirmed` 必填 | 安装前必须确认应用、查询详情、检查节点资源并确认 `satisfies=true`，随后通过 `clarify` 展示方案。用户点击确认后才能设置 `confirmed=true`。handler 实际发送的业务字段只有 `app_id` 和 `node_id`。安装为异步任务，提交成功后禁止重复调用。 |
+| `app_deploy_start_app_install`    | `install_id` 必填                   | 启动已停止实例。仅 `stopped` 状态可调用，脚本式应用不支持启动。handler 会将 `install_id` 映射为请求体中的 `id`。                                                                              |
+| `app_deploy_stop_app_install`     | `install_id`、`confirmed` 必填       | 停止实例并销毁容器。调用前必须通过 `clarify` 明确告知后果并取得确认。handler 实际发送的业务字段只有由 `install_id` 映射得到的 `id`，`confirmed` 不发送给后端。                                                 |
+| `app_deploy_restart_app_install`  | `install_id` 必填                   | 重启运行中的实例，过程为先停后启。仅 `running` 状态可调用，脚本式应用不支持重启。                                                                                                           |
+| `app_deploy_get_app_install_logs` | `install_id` 必填，`lines` 可选        | 获取容器日志。`lines` 默认 `300`，可根据用户需求调整。失败时应直接说明错误原因，不得描述为成功。                                                                                                  |
+
+### 统一参数规则
+
+1. 所有 ID 必须来自工具真实返回，不得编造。
+2. `app_id`、`install_id`、`node_id` 含义不同，不得混用。
+3. 调用工具时使用公开参数名，不要使用 handler 内部映射后的字段名，例如应传 `install_id`，不要传 `id`。
+4. `tools.json` 未声明的参数禁止传入。
+5. `confirmed=true` 只能在用户通过 `clarify` 明确确认后使用。
+6. `page`、`page_size` 等 handler 固定值不是公开参数。
+7. 查询节点时禁止展示或推测内网 IP。
+8. 安装为异步操作，提交成功后不得重复调用。
+9. 启动、停止和重启前必须先确认实例状态符合要求。
+10. 参数校验失败或后端请求失败时，必须如实说明原因。
+
