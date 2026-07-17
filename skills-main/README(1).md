@@ -10,10 +10,10 @@
 | `turbomesh-vm` | 虚拟机管理 — 创建、查询、删除、监控 |
 | `turbomesh-baremetal` | 裸金属管理 — 分配、部署、释放、电源管理 |
 | `turbomesh-usage` | 用量查询 — 资源用量、趋势、账单 |
-| `app-deployment` | 应用部署 — 应用发现、安装、实例启停、重启与日志 |
-| `elastic-deployment` | 弹性服务管理 — 扩缩容、配置、YAML、Ingress、日志与事件 |
-| `finetuning-orchestrator` | 微调编排 — 实验、训练 Job、效果对比与模型发布 |
-| `model-deployment` | 模型部署 — 推理服务部署、端点、日志与性能指标 |
+| `turbomesh-app-deployment` | 应用部署 — 应用发现、安装、实例启停、重启与日志 |
+| `turbomesh-elastic-deployment` | 弹性服务管理 — 扩缩容、配置、YAML、Ingress、日志与事件 |
+| `turbomesh-finetuning-orchestrator` | 微调编排 — 实验、训练 Job、效果对比与模型发布 |
+| `turbomesh-model-deployment` | 模型部署 — 推理服务部署、端点、日志与性能指标 |
 
 ## 快速安装
 
@@ -34,10 +34,10 @@ curl -sL https://raw.githubusercontent.com/gaowenrong/skills/main/install.sh | b
     ├── turbomesh-vm/SKILL.md
     ├── turbomesh-baremetal/SKILL.md
     ├── turbomesh-usage/SKILL.md
-    ├── app-deployment/SKILL.md
-    ├── elastic-deployment/SKILL.md
-    ├── finetuning-orchestrator/SKILL.md
-    └── model-deployment/SKILL.md
+    ├── turbomesh-app-deployment/SKILL.md
+    ├── turbomesh-elastic-deployment/SKILL.md
+    ├── turbomesh-finetuning-orchestrator/SKILL.md
+    └── turbomesh-model-deployment/SKILL.md
 ```
 
 ## 安全约定
