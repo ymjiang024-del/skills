@@ -197,3 +197,67 @@ finetuning_publish_model(
 - 明确区分 `experiment_id`、`job_id`、`run_id`、`model_ref_id` 和 dataset ref ID。
 - 工具未返回成功前，不要暗示资源变更已经完成。
 - 工具返回字段不完整时，明确说明缺失信息，不要补造。
+
+## 工具请求参数说明
+
+只能传入工具声明的公开参数。模型、数据集、Experiment、Job、Run 和 Worker 等 ID 必须来自工具真实返回，不得猜测或编造。
+
+### 参数总表
+
+| 参数                            | 类型/默认值                             | 含义与限制                                                                     |
+| ----------------------------- | ---------------------------------- | ------------------------------------------------------------------------- |
+| `dataset_id`                  | `integer ≥ 1`                      | 本地数据集 ID，仅用于预览数据集；通常取数据集列表中的 `local_dataset_id`，不要与 DatasetRef 的 `id` 混用。 |
+| `limit`                       | `1–50`；预览默认 `10`                   | 在数据集预览中表示样本条数；在训练历史旧分页中表示每页条数，含义由工具决定。                                    |
+| `node_id`                     | `string`                           | 执行节点 ID，用于检查 Worker 是否在线及是否支持 `compare_chat`。                             |
+| `run_name`                    | `string`                           | 实验或训练任务的显示名称。创建 Experiment 时必填；启动 Job 时可选，不传则使用 Experiment 快照中的名称。        |
+| `model_ref_id`                | `string`                           | 模型引用 ID，必须来自 `finetuning_list_models` 返回项的 `id`，不是模型名称或本地模型 ID。           |
+| `primary_dataset_ref_id`      | `string`                           | 主数据集引用 ID，必须来自 `finetuning_list_datasets` 返回项的 `id`。                      |
+| `dataset_ref_ids`             | `string[]`                         | Experiment 关联的数据集引用 ID 列表，必须包含 `primary_dataset_ref_id`；即使只有一个数据集，也应传数组。  |
+| `finetune_strategy`           | `lora/full/freeze`，默认 `lora`       | 微调策略：LoRA 参数高效微调、全量微调或冻结部分参数训练。                                           |
+| `experiment_id`               | `string`                           | Experiment ID，用于读取/修改参数、启动训练、查询发布状态和发布模型。                                 |
+| `num_train_epochs`            | `number ≥ 1`                       | 训练轮数。数值越大训练时间越长，也更可能过拟合。                                                  |
+| `learning_rate`               | `number > 0`                       | 学习率，控制参数更新幅度。                                                             |
+| `per_device_train_batch_size` | `integer ≥ 1`                      | 每张训练设备一次处理的样本数，增大后通常需要更多显存。                                               |
+| `cutoff_len`                  | `integer ≥ 1`                      | 单条训练样本的最大 Token 长度，超出部分会被截断。                                              |
+| `max_samples`                 | `integer ≥ 1`，可选                   | 最大训练样本数；不传或为 `null` 表示使用全部数据。                                             |
+| `lora_rank`                   | `integer ≥ 1`                      | LoRA 矩阵秩，越大可训练参数越多，资源占用也通常越高。                                             |
+| `warmup_ratio`                | `0–1`                              | 学习率预热阶段占总训练步数的比例。                                                         |
+| `job_id`                      | `string`                           | 训练任务 ID，用于任务详情、停止、删除、日志和 Compare Chat；必须来自启动结果或任务列表。                      |
+| `confirmed`                   | `boolean`                          | 启动、停止、删除和发布时必须为 `true`；只能在用户通过 `clarify` 明确确认后设置，仅用于工具安全校验。               |
+| `page` / `page_size`          | 默认 `1` / `20`；`page_size` 最大 `100` | 训练运行历史的新分页方式。只要传入任意一个，handler 就优先使用该分页方式。                                 |
+| `offset`                      | `integer ≥ 0`                      | 训练运行历史的旧分页偏移量；仅在未传 `page`、`page_size` 时与 `limit` 一起生效。                    |
+| `run_id`                      | `string`                           | 训练运行 ID，用于查询运行详情；当前实现中通常与对应的 `job_id` 相同，但应使用真实返回值。                       |
+| `messages`                    | 对象数组                               | Compare Chat 的对话消息，每项必须包含 `role` 和 `content`。应直接传数组，不要传 JSON 字符串。         |
+| `role` / `content`            | `string`                           | 消息角色与内容；角色通常为 `user` 或 `assistant`。                                       |
+| `max_tokens`                  | `integer ≥ 1`，默认 `512`             | Base 和微调模型单次对比生成的最大 Token 数。                                              |
+| `temperature`                 | `0–2`，默认 `0.7`                     | 采样随机度；越低通常越稳定，越高通常越发散。                                                    |
+
+### 工具参数速查
+
+| 工具                                                                             | 请求参数                                                                                           | 关键要求                                                                                      |
+| ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `finetuning_list_models` / `finetuning_list_datasets` / `finetuning_list_jobs` | 无                                                                                              | 返回分页对象，从 `list` 中读取真实资源 ID。                                                               |
+| `finetuning_preview_dataset`                                                   | `dataset_id` 必填，`limit` 可选                                                                     | 使用本地 Dataset ID，不要传 DatasetRef ID。                                                        |
+| `finetuning_check_worker_node`                                                 | `node_id`                                                                                      | Compare Chat 前确认节点为 `ONLINE` 且包含 `compare_chat` 能力。                                       |
+| `finetuning_create_experiment`                                                 | `run_name`、`model_ref_id`、`primary_dataset_ref_id`、`dataset_ref_ids` 必填；`finetune_strategy` 可选 | 不得传旧字段 `goal`；handler 收到该字段也会忽略。                                                          |
+| `finetuning_get_experiment_parameters`                                         | `experiment_id`                                                                                | 获取推荐值、覆盖值、最终生效参数和是否可启动。                                                                   |
+| `finetuning_update_experiment_parameters`                                      | `experiment_id` 必填；7 个安全训练参数均可选                                                                | handler 只提交本次明确提供的非空字段，并自动包装为 `overrides`。                                                |
+| `finetuning_launch_training_job`                                               | `experiment_id`、`confirmed` 必填；`run_name` 可选                                                   | 只以 Experiment 为训练配置快照；`confirmed` 不发送给后端。                                                 |
+| `finetuning_get_job` / `finetuning_get_job_logs`                               | `job_id`                                                                                       | 分别查询任务详情和纯文本日志。                                                                           |
+| `finetuning_stop_job` / `finetuning_delete_job`                                | `job_id`、`confirmed`                                                                           | 停止通常只用于 `RUNNING`；删除通常只用于 `SUCCESS/FAILED/STOPPED`，且会删除配置、日志和输出目录。                        |
+| `finetuning_list_training_runs`                                                | `page/page_size` 或兼容的 `limit/offset`                                                           | 不要混用两套分页；若混用，handler 优先采用 `page/page_size`。                                               |
+| `finetuning_get_training_run`                                                  | `run_id`                                                                                       | 获取运行摘要、Job 详情、实验来源和关联 Compare 任务。                                                         |
+| `finetuning_compare_chat`                                                      | `job_id`、`messages` 必填；`max_tokens`、`temperature` 可选                                           | Job 必须为 `SUCCESS` 或 `FAILED` 终态；禁止传 `query`、`prompts`、`model_ref_id`、`base_model_id` 等字段。 |
+| `finetuning_get_publish_status`                                                | `experiment_id`                                                                                | 发布前检查 `publishable`、审批、产物注册及现有发布模型状态。                                                     |
+| `finetuning_publish_model`                                                     | `experiment_id`、`confirmed`                                                                    | 只有发布状态允许时执行；`confirmed` 只用于安全确认。                                                          |
+
+### 统一规则
+
+1. `dataset_id` 是本地数据集 ID，`primary_dataset_ref_id` 和 `dataset_ref_ids` 是数据集引用 ID，不得混用。
+2. `experiment_id`、`job_id`、`run_id` 分别代表实验、训练任务和训练运行；即使部分值相同，也按工具声明传参。
+3. Experiment 只允许修改 7 个安全训练参数，Job 锁定期间不得编辑。
+4. 启动、停止、删除和发布必须先通过 `clarify` 确认，再传 `confirmed=true`。
+5. Compare Chat 每次只测试一个用户确认的问题，`messages` 必须为数组。
+6. 工具未声明的参数禁止传入；不得使用已废弃的 `goal`，也不得编造工具名称。
+
+
