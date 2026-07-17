@@ -53,10 +53,6 @@ Token 获取方式参考 `turbomesh-auth` 技能的认证优先级：
 | `power_control_baremetal`（关机） | POST | `/api/baremetal/{system_id}/power_off` |
 | `exec_on_baremetal` | POST | `/api/voidgate/exec` |
 
-当前 handler **未实现**以下旧接口，不要调用或向用户承诺：
-
-- `/api/baremetal/images`
-- `/api/baremetal/{system_id}/deploy`
 
 ## 页面跳转规范
 
@@ -143,29 +139,7 @@ ssh -p 2222 user804:baremetal-xxxx@jump-host
 
 按规格标签聚合，显示每种配置的可用数量：
 
-```http
-GET /api/baremetal/machines/count
-```
-
-典型响应：
-
-```json
-{
-  "items": [
-    {
-      "tag_id": 1,
-      "tag_code": "A800-80G",
-      "model": "NVIDIA A800 80GB",
-      "vram": "80GB",
-      "architecture": "amd64",
-      "cpu_count": 128,
-      "memory": 524288,
-      "count": 5
-    }
-  ],
-  "total": 5
-}
-```
+`list_baremetal_options`
 
 获取规格后必须调用 `clarify` 让用户选择。即使只有一种规格，也必须确认，不能默认选择。
 
@@ -241,24 +215,7 @@ task_done(summary="已取消操作")
 
 分配接口：
 
-```http
-POST /api/baremetal/allocate
-```
-
-`allocate_and_deploy` 示例参数：
-
-```json
-{
-  "tags": ["A800-80G"],
-  "allocate_mode": "allocate_and_deploy",
-  "osystem": "ubuntu",
-  "distro_series": "noble",
-  "os_user": "admin",
-  "os_pwd": "用户在 clarify 中提供的密码",
-  "use_ssh_key": true,
-  "comment": "由 AI Agent 分配"
-}
-```
+‘allocate_baremetal’
 
 ### 参数说明
 
@@ -326,9 +283,7 @@ POST /api/baremetal/allocate
 
 ## 查看已分配机器列表
 
-```http
-GET /api/baremetal/allocated
-```
+’list_baremetals‘
 
 工具响应会过滤机器的 `ip_addresses`。向用户摘要展示：
 
@@ -346,9 +301,7 @@ GET /api/baremetal/allocated
 
 ## 查看机器详情
 
-```http
-GET /api/baremetal/{system_id}
-```
+’get_baremetal‘
 
 调用 `get_baremetal` 获取真实详情。不要根据列表中的旧状态推测机器已经部署完成。
 
@@ -356,20 +309,7 @@ GET /api/baremetal/{system_id}
 
 ## 获取 WebSSH
 
-完整路径：
-
-```http
-GET /api/voidgate/webssh?resource_type=baremetal&resource_id={system_id}
-```
-
-典型返回：
-
-```json
-{
-  "url": "https://example.com/webssh/...",
-  "expires_in": 300
-}
-```
+’get_baremetal_webssh_url‘
 
 该 URL 已可直接打开，不要再拼接 `direct_url` 或其他前缀。
 
@@ -379,21 +319,7 @@ GET /api/voidgate/webssh?resource_type=baremetal&resource_id={system_id}
 
 裸金属机器通过 Voidgate 跳板机连接，禁止直接使用机器 IP。
 
-完整路径：
-
-```http
-GET /api/voidgate/login-script?resource={system_id}&type=baremetal
-```
-
-典型响应：
-
-```json
-{
-  "command": "ssh -p 2222 user804:baremetal-xxxx@jump-host",
-  "jump_host": "内部跳板机地址",
-  "jump_port": 2222
-}
-```
+’get_baremetal_login_script‘
 
 只展示 `command` 字段，并将其放在 Bash 代码块中。不要单独展示 `jump_host`，也不要引导用户直连机器 IP。
 
@@ -454,19 +380,7 @@ POST /api/baremetal/{system_id}/power_off
 
 释放接口：
 
-```http
-POST /api/baremetal/{system_id}/release
-```
-
-工具调用参数：
-
-```json
-{
-  "system_id": "abc-def-123",
-  "confirmed": true,
-  "comment": "No longer needed"
-}
-```
+’release_baremetal‘
 
 当前 handler 的行为：
 
@@ -500,19 +414,7 @@ POST /api/baremetal/{system_id}/release
 
 完整路径：
 
-```http
-POST /api/voidgate/exec
-```
-
-工具参数：
-
-```json
-{
-  "system_id": "abc-def-123",
-  "command": "nvidia-smi",
-  "timeout": 300
-}
-```
+’exec_on_baremetal‘
 
 handler 转换为后端请求：
 
