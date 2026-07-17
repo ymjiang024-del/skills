@@ -1,6 +1,7 @@
 ---
 name: turbomesh-usage
-description: 查询 TurboMesh 平台资源用量、历史明细、趋势、构成和活跃资源排行。用户询问本月或指定时间范围的资源使用情况、费用相关用量、资源历史、按日或按月趋势、资源类型占比、使用最多的机器或资源时使用本技能。仅调用 get_usage_overview、get_usage_history、get_usage_trend、get_usage_breakdown 和 get_usage_top，并严格使用 handlers 中声明的路径与参数。
+description: TurboMesh 用量查询 — 查询资源用量、额度、账单
+verison：0.1.0
 ---
 
 # TurboMesh 用量查询技能
