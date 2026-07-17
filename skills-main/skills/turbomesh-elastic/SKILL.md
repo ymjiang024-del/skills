@@ -1,6 +1,7 @@
 ---
 name: elastic-deployment
 description: 管理现有弹性服务（Elastic Deployment）并执行安全的查看、扩缩容、配置更新、YAML 编辑、Ingress 调整、日志排查和资源选择辅助。用于用户询问弹性部署列表或详情、修改副本和弹性策略、更新运行配置、编辑部署 YAML、配置域名/TLS、查看 Pod 日志或生命周期事件时。此技能不创建、删除或释放部署；所有资源变更必须先展示方案并获得明确确认。
+version: 0.1.0
 ---
 
 # 弹性服务管理
