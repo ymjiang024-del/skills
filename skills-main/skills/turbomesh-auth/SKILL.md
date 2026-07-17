@@ -94,9 +94,9 @@ TURBOMESH_API_KEY
 ```json
 {
   "api_url": "http://47.83.30.216:8000",
-  "token": "eyJhbGciOiJIUzI1...",
-  "api_key": "tm_xxxxxxxxxxxxxxxxx"
+  "token": "tm_XmRw_JRF58yn_6pVFRDTeeFqDxRuxoN1uA3rckm1knc"
 }
+
 ```
 
 读取规则：
@@ -134,58 +134,8 @@ tm_xxxxxxxxxxxxxxxxx
 }
 ```
 
-## 4. 邮箱密码登录
-
-仅在没有可用 JWT Token 或 API Key，且用户无法提供 API Key 时，询问邮箱和密码。
-
-```http
-POST {api_url}/api/auth/signin
-Content-Type: application/json
-
-{
-  "email": "user@example.com",
-  "password": "user-password"
-}
-```
-
-成功响应示例：
-
-```json
-{
-  "access_token": "eyJhbGciOiJIUzI1...",
-  "token_type": "bearer",
-  "user": {
-    "id": "a1b2c3d4e5f67890",
-    "username": "john",
-    "email": "user@example.com",
-    "account_name": "John",
-    "is_active": true
-  }
-}
-```
-
-登录成功后：
-
-1. 设置 `kind=jwt`、`source=interactive_signin`。
-2. 将 `access_token` 保存到 `~/.turbomesh/config.json` 的 `token` 字段。
-3. 保留已有 `api_url`、`api_key` 和其他未知字段。
-4. 永远不要保存密码。
-
-配置示例：
-
-```json
-{
-  "api_url": "http://47.83.30.216:8000",
-  "token": "eyJhbGciOiJIUzI1..."
-}
-```
-
 ## 认证请求头
 
-### JWT Token
-
-```http
-Authorization: Bearer {access_token}
 ```
 
 ### API Key
