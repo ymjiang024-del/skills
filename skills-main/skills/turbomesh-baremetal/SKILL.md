@@ -14,7 +14,7 @@ version: 0.1.0
 
 以下路径以 `handlers.py` 中的实际实现为准。不得缩写、猜测或使用旧路径。
 
-| 工具 | 方法 | 完整路径 |
+| 方法 | 请求方式 | 完整路径 |
 |---|---|---|
 | `list_baremetal_options` | GET | `/api/baremetal/machines/count` |
 | `list_baremetals` | GET | `/api/baremetal/allocated` |
