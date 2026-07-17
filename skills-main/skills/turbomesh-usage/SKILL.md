@@ -258,3 +258,36 @@ get_usage_history(
 - `usage_count` 表示计量记录条数，可能包含多次分配和释放周期。
 - 查看单资源用量时，只能使用当前已注册工具提供的过滤和返回结果，不要调用未实现能力。
 - 当前唯一可用工具是：`get_usage_overview`、`get_usage_history`、`get_usage_trend`、`get_usage_breakdown`、`get_usage_top`。
+
+## 工具请求参数说明
+
+所有参数均为可选，只能传入工具已声明的字段。
+
+| 参数              | 类型/默认值                         | 含义与限制                                                                                                                                                    |
+| --------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `start_time`    | ISO 8601 字符串                   | 查询开始时间，如 `2024-06-01T00:00:00`。未传时由后端采用默认范围：总览、构成、TOP 通常从本月 1 日开始，历史和趋势通常从最近 30 天开始。                                                                     |
+| `end_time`      | ISO 8601 字符串                   | 查询结束时间；未传时通常默认为当前时间。开始时间应早于结束时间。                                                                                                                         |
+| `resource_type` | `string`，默认 `all`              | 资源类型过滤。支持 `all`、`baremetal`、`vm`、`ip`、`network`、`volume`、`template`、`iso`、`snapshot`、`security_group`、`load_balancer`、`port_forwarding`、`vpn`、`vm_disk`。 |
+| `limit`         | `integer`                      | 返回数量。历史查询默认 `20`，TOP 查询默认 `10`。                                                                                                                          |
+| `offset`        | `integer`，默认 `0`               | 历史查询的分页偏移量，表示跳过前多少条记录。                                                                                                                                   |
+| `group_by`      | `string`                       | 聚合或拆分维度。历史查询只支持 `resource`，用于合并同一资源的多条计量记录；趋势查询只支持 `resource_type`，用于按资源类型拆分趋势。handler 不会自动补该参数，需要时必须显式传入。                                               |
+| `granularity`   | `daily` / `monthly`，默认 `daily` | 趋势聚合粒度：按天或按月统计，仅用于 `get_usage_trend`。                                                                                                                    |
+
+### 工具参数速查
+
+| 工具                    | 可用参数                                                                           |
+| --------------------- | ------------------------------------------------------------------------------ |
+| `get_usage_overview`  | `start_time`、`end_time`                                                        |
+| `get_usage_history`   | `resource_type`、`start_time`、`end_time`、`limit`、`offset`、`group_by=resource`   |
+| `get_usage_trend`     | `resource_type`、`start_time`、`end_time`、`granularity`、`group_by=resource_type` |
+| `get_usage_breakdown` | `start_time`、`end_time`                                                        |
+| `get_usage_top`       | `resource_type`、`start_time`、`end_time`、`limit`                                |
+
+### 统一规则
+
+1. 时间参数必须使用 ISO 8601 字符串，不要传 Unix 时间戳。
+2. 想按资源聚合历史记录时，应显式传 `group_by=resource`；想按资源类型拆分趋势时，传 `group_by=resource_type`。
+3. `limit` 在不同工具中的默认值不同：历史为 `20`，TOP 为 `10`。
+4. 工具未声明的参数不得传入；结果中优先展示资源名称和计量单位，不直接暴露原始资源 ID。
+
+
