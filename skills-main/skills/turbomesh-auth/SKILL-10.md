@@ -16,23 +16,7 @@ version: 0.1.0
 
 调用 TurboMesh API 时，按以下优先级获取当前用户的 JWT token：
 
-### 1. System Prompt 注入（推荐，用于网页版 Public Agent）
-
-检查当前对话的 system message 中是否包含：
-
-```
-Authorization: Bearer <token>
-```
-
-如果存在，提取 `<token>` 并在每次 API 请求时使用。
-
-也可识别以下格式作为兼容：
-- `TURBOMESH_TOKEN=<token>`
-- `"token": "<token>"`
-
-该 token 通常由部署平台自动注入，无需用户手动提供。
-
-### 2. 本地配置文件（用于用户本地安装的 Agent）
+### 1. 本地配置文件（用于用户本地安装的 Agent）
 
 读取 `~/.turbomesh/config.json` 中的 `token` 字段：
 
@@ -43,7 +27,7 @@ Authorization: Bearer <token>
 }
 ```
 
-### 3. 交互式询问（兜底）
+### 2. 交互式询问（兜底）
 
 如果以上都没有，向用户询问邮箱和密码，调用登录接口获取 token。
 
