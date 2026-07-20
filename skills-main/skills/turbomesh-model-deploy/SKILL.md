@@ -1,7 +1,7 @@
 ---
-name: model-deployment
+name: turbomesh-model-deploy
 description: 部署、查看、停止和诊断推理模型服务。用于用户要求部署 Qwen、Llama 等模型，选择模型与 GPU 节点，查看已有部署、调用端点、日志或性能指标，以及停止部署时。严格执行部署前查重、GPU 容量检查、资源变更确认、状态轮询和端点安全展示规则；不要用于模型微调训练。
-version：0.1.0
+version: 0.1.0
 ---
 
 # 模型部署
