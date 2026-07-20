@@ -1,6 +1,6 @@
 ---
 name: turbomesh-app-deploy
-description: Turbomesh应用部署 —— 浏览应用、安装实例、启动、停止、重启与日志排查
+description: Turbomesh应用部署 — 浏览应用、安装实例、启动、停止、重启与日志排查
 version: 0.1.0
 ---
 
