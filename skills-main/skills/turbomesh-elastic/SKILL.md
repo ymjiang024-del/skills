@@ -1,6 +1,6 @@
 ---
 name: turbomesh-elastic
-description: Turbomesh 弹性服务 - 查看现有弹性部署并执行扩缩容、配置、Ingress、日志与事件管理
+description: Turbomesh 弹性服务 — 查看现有弹性部署并执行扩缩容、配置、Ingress、日志与事件管理
 version: 0.1.0
 ---
 
