@@ -94,7 +94,7 @@ TURBOMESH_API_KEY
 ```json
 {
   "api_url": "http://47.83.30.216:8000",
-  "token": "tm_XmRw_JRF58yn_6pVFRDTeeFqDxRuxoN1uA3rckm1knc"
+  "token": "<token>"
 }
 
 ```
