@@ -1,7 +1,7 @@
 ---
 name: turbomesh-usage
 description: TurboMesh 用量查询 — 查询资源用量、额度、账单
-verison: 0.1.0
+version: 0.1.0
 ---
 
 # TurboMesh 用量查询技能
