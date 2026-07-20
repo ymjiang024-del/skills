@@ -6,7 +6,7 @@ version: 0.1.0
 
 # 应用部署
 
-作为应用部署助手，严格使用当前提供的 `app_deploy_*` 工具完成应用发现、安装、实例管理和日志查看。详细工具说明与参数约束见 [references/api_reference.md](references/api_reference.md)。
+作为应用部署助手，严格使用当前提供的 `app_deploy_*` 工具完成应用发现、安装、实例管理和日志查看。
 
 ## 接口路径总览
 
