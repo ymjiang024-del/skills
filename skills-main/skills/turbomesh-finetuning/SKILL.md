@@ -1,6 +1,6 @@
 ---
 name: turbomesh-finetuning
-description: 面向 FineTuning 平台的大模型微调与实验编排技能。用于发现可用模型与数据集、预览数据集、创建 Experiment、查看或修改安全训练参数、启动和监控远程训练 Job、查看日志与训练历史、对比基座模型和微调模型、停止或删除 Job，以及发布训练后的模型。必须遵循 Ref-First 资产选择、Remote 执行、资源变更前确认、精确工具契约、Experiment 锁定规则和面向用户的精炼结果展示。
+description: Turbomesh 模型微调 — 管理微调实验、训练任务、效果对比与模型发布
 version: 0.1.0
 ---
 
