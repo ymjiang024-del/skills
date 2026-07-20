@@ -43,8 +43,6 @@ version: 0.1.0
 - `compare_models`
 - `compare_model_outputs`
 
-需要确认接口映射、参数限制、状态规则或精确调用形式时，读取 [references/api_reference.md](references/api_reference.md)。
-
 ## 核心规则
 
 1. 优先通过 `finetuning_list_models` 和 `finetuning_list_datasets`发现资产。
